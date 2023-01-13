@@ -1,0 +1,179 @@
+{
+	"name": "LedFX",
+	"type": "HTTP",
+	"path": "Software",
+	
+	"version": "1.0.0",
+	"description": "send CMD to your LedFX",
+	"url":"",
+	"downloadURL": "",
+	"hasInput": true,
+	"hasOutput": true, 
+	"hideDefaultCommands": false,
+	"hideDefaultParameters": [
+		"protocol"
+	],
+	
+	"defaults": {
+		"baseAddress":"http://127.0.0.1:8888/api",
+		"autoAdd": false,
+		"protocol":"JSON",
+		"authentication":
+			{
+				"enabled":false
+			}
+	},
+
+	"parameters": {
+			"LedFX Info": {
+				"type": "Trigger",
+				"description": "LedFX documentation"
+			}
+	},
+
+	"values": {	
+	},
+	
+	
+	"scripts": [
+		"LedFXCMD.js"
+	],
+	
+	"commands": {
+		
+		"Switch On/Off ":
+		{
+			"menu":"LedFX-Virtual",
+			"callback":"VirtualOnOff",
+			"parameters": {
+				"devicename": {
+					"type": "String",
+					"default": "mydevicename", 
+					"description": "Virtual Device Name",
+					"useForMapping": false
+				},
+				"OnOff": {
+					"type": "Boolean",
+					"default": false, 
+					"description": "Checked will put the virtual device On",
+					"useForMapping": false
+				}
+			}
+		},		
+
+		"Apply Effect ":
+		{
+			"menu":"LedFX-Virtual",
+			"callback":"VirtualEffect",
+			"parameters": {
+				"devicename": {
+					"type": "String",
+					"default": "mydevicename", 
+					"description": "Virtual Device Name",					
+					"useForMapping": false
+				},
+				
+				"effect": { 
+					"type":"Enum", 
+					"options": {
+						"Gradient":"gradient",
+						"Bands":"bands",
+						"Bands Matrix":"bands_matrix",
+						"Bar":"bar",
+						"Blade Power plus":"blade_power_plus",
+						"Block Reflections":"block_reflections",
+						"Blocks":"blocks",
+						"Crawler":"crawler",						
+						"Energy":"energy",
+						"Energy 2":"energy2",
+						"Equalizer":"equalizer",
+						"Fade":"fade",
+						"Fire":"fire",
+						"Glitch":"glitch",
+						"Lava Lamp":"lava_lamp", 
+						"Magnitude":"magnitude",
+						"Marching":"marching",
+						"Melt":"melt",
+						"Multicolor Bar":"multiBar",
+						"Pitch Spectrum":"pitchSpectrum",
+						"Power":"power",
+						"Rain":"rain",
+						"Rainbow":"rainbow",
+						"Strobe":"real_strobe",
+						"Scroll":"scroll",
+						"Single Color":"singleColor",
+						"Spectrum":"spectrum",
+						"BPM Strobe":"strobe",
+						"Wavelength":"wavelength"						
+						} ,
+					"description": "Effect Name to apply",						
+					"default": "gradient"
+						},
+			}
+		},		
+
+		"Remove Effect ":
+		{
+			"menu":"LedFX-Virtual",
+			"callback":"VirtualRemoveEffect",
+			"parameters": {
+				"devicename": {
+					"type": "String",
+					"default": "mydevicename", 
+					"description": "Virtual Device Name to remove Effect",
+					"useForMapping": false
+				},
+			}
+		},		
+
+
+		"List All ":
+		{
+			"menu":"LedFX-Virtual",
+			"callback":"VirtualList"
+
+		},		
+
+		
+		"De/Activate ":
+		{
+			"menu":"LedFX-Scene",
+			"callback":"SceneOnOff",
+			"parameters": {
+				"scenename": {
+					"type": "String",
+					"default": "myscenename", 
+					"description": "Scene Name",					
+					"useForMapping": false
+				},
+				"activate": {
+					"type": "Boolean",
+					"description": "Checked will activate the Scene",					
+					"default": true, 
+					"useForMapping": false
+				}
+			}
+		},
+
+		"List All Scene":
+		{
+			"menu":"LedFX-Scene",
+			"callback":"SceneList"
+
+		},		
+		
+		"List All Device":
+		{
+			"menu":"LedFX-Device",
+			"callback":"DeviceList"
+
+		},		
+
+
+		"Toogle Ledfx Play On/Off ":
+		{
+			"menu":"LedFX-Main",
+			"callback":"LedfxOnOff"
+		},		
+	}
+}
