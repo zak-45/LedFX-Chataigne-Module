@@ -28,7 +28,12 @@
 			"LedFX Info": {
 				"type": "Trigger",
 				"description": "LedFX documentation"
-			}
+			},
+			"LedFX Paused": {
+				"type": "Boolean",
+				"description": "True if LedFX is on Pause",
+				"readOnly": true
+			}			
 	},
 
 	"values": {	

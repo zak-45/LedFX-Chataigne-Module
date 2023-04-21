@@ -20,6 +20,7 @@ params.payload = payload;
 var LedFXvirtual_url = "/virtuals";
 var LedFXscene_url = "/scenes";
 var LedFXdevice_url = "/devices";
+var LedFXpower_url = "/power";
 // Windows specific
 var LedFXExeName = "ledfx.exe";
 var LedFXPath = "";
@@ -27,6 +28,8 @@ var LedFXPath = "";
 var SCAexist = root.modules.getItemWithName("SCAnalyzer");
 // to made some logic only once at init
 var isInit = true;
+var firstStatus = 1;
+var ledfxStatus = 1;
 
 //We create necessary entries in modules & sequences. We need OS / Sound Card / HTTP and  Sequence with Trigger / Audio.
 function init()
@@ -103,9 +106,29 @@ function moduleParameterChanged (param)
 	
 	if (param.name == "ledFXInfo")
 	{
-		util.gotoURL('https://www.ledfx.app/');		
+		util.gotoURL('https://www.ledfx.app/');
+		
+	} else if (param.name == "ledFXPaused") {
+		
+		script.log("Ledfx status changed to : " + local.parameters.ledFXPaused.get());
+
 	}
 	
+}
+
+function scriptParameterChanged (param)
+{
+	script.log("Script Param changed : "+param.name);
+}
+
+function moduleValueChanged (value) 
+{	
+
+	if (param.name == "paused")
+	{
+		local.parameters.ledFXPaused.set() == local.values.paused.get(); 
+	}
+
 }
 
 function update()
@@ -117,8 +140,8 @@ function update()
 			util.showMessageBox("LEDFX !", "SCAnalyzer present, you need to reload its script", "warning", "OK");
 		}
 
-		var infos = util.getOSInfos(); 
-		
+		var infos = util.getOSInfos(); 		
+			
 		script.log("Hello "+infos.username);	
 		script.log("We run under : "+infos.name);
 		
@@ -136,6 +159,8 @@ function update()
 			} else {
 				 
 				script.log("LedFX is running ");
+				// check status
+				LedfxStatus();
 			}
 		}	
 
@@ -151,7 +176,7 @@ function update()
 // Put global LedFX play On or Pause
 function LedfxOnOff(play)
 {
-	script.log("-- Custom command On/Off LedFX");
+	script.log("-- Custom command On/Off LedFX", play);
 	if (play === true)
 	{
 		payload.active = true;
@@ -161,6 +186,27 @@ function LedfxOnOff(play)
 
 	sendPUTValue(LedFXvirtual_url);  
 }
+
+// restart {"timeout":1,"action":"restart"}
+function LedfxRestart()
+{
+	script.log("-- Custom command restart LedFX");
+
+	payload.timeout = 1;
+	payload.action = "restart";
+
+	local.sendPOST(LedFXpower_url,params);  
+}
+
+// Get Ledfx Status
+function LedfxStatus()
+{
+	script.log("-- Custom command Status LedFX");
+
+	local.sendGET(LedFXvirtual_url);
+	
+}
+
 
 /*
  Scenes Commands
@@ -207,7 +253,7 @@ function VirtualOnOff(devicename,OnOff)
 {
 	script.log("-- Custom command virtual OnOff: ")+devicename;
   
-	local.parameters.autoAdd.set(0);  
+	local.parameters.autoAdd.set(1);  
 	var payload = {}; //the payload can be either a simple string or an object that will be automatically stringified
 	params.payload = payload;
 	payload.active = OnOff;
@@ -220,7 +266,7 @@ function VirtualEffect(devicename,effect)
 {   
 	script.log("-- Custom command virtual Effect:"+effect);	
 	
-	local.parameters.autoAdd.set(0);
+	local.parameters.autoAdd.set(1);
 	var payload = {}; //the payload can be either a simple string or an object that will be automatically stringified
     params.payload = payload;
 	payload.type=effect;
@@ -233,7 +279,7 @@ function VirtualRemoveEffect(devicename)
 {   
 	script.log("-- Custom command virtual remove Effect: "+devicename);	
 	
-	local.parameters.autoAdd.set(0);	
+	local.parameters.autoAdd.set(1);	
     var payload = {}; //the payload can be either a simple string or an object that will be automatically stringified
     params.payload = payload;
 	payload.type=effect;
@@ -276,7 +322,7 @@ function sendPUTValue(value)
 {   
 	script.log("-- Custom command called with value :" + value);
 	
-	local.parameters.autoAdd.set(0);
+	//local.parameters.autoAdd.set(1);
 	
 	local.sendPUT(value,params);
 }
@@ -304,3 +350,22 @@ function ledFXdashboard()
 		root.dashboards.editMode.set(false);
 	}
 }
+ 
+ 
+// This function will be called each time data has been received.
+function dataEvent(data, requestURL)
+{
+	if (requestURL.contains("virtuals"))
+	{
+		script.log("Ledfx Status : " + data.paused);
+		local.parameters.ledFXPaused.setAttribute("readOnly", false);
+		local.parameters.ledFXPaused.set(data.paused);
+		local.parameters.ledFXPaused.setAttribute("readOnly", true);
+	}
+}
+
+function test()
+{
+	script.log("status : " + ledfxStatus);
+}
+
