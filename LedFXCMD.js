@@ -5,7 +5,7 @@ d:25/10/2022
 v:1.0.0
 
 Chataigne Module for LedFX
-This module connect to ledfx api and let you modify virtual On/Off, Effects etc ...
+This module connect to ledfx api and let you modify LedFX like virtual On/Off, Effects ...
 
 
 */
@@ -21,9 +21,12 @@ var LedFXvirtual_url = "/virtuals";
 var LedFXscene_url = "/scenes";
 var LedFXdevice_url = "/devices";
 // Windows specific
-var LedFXExeName = "LedFx_core_portable.exe";
-var LedFXPath = "C:\\ledFX\\";
-
+var LedFXExeName = "ledfx.exe";
+var LedFXPath = "";
+//SCAnalyzer
+var SCAexist = root.modules.getItemWithName("SCAnalyzer");
+// to made some logic only once at init
+var isInit = true;
 
 //We create necessary entries in modules & sequences. We need OS / Sound Card / HTTP and  Sequence with Trigger / Audio.
 function init()
@@ -33,7 +36,7 @@ function init()
 	var OSexist = root.modules.getItemWithName("OS");
 	var SCexist = root.modules.getItemWithName("Sound Card");
 	var SQexist = root.sequences.getItemWithName("Sequence");
-	var SCAexist = root.modules.getItemWithName("SCAnalyzer");
+
 
 	if (OSexist.name == "os")
 	{
@@ -67,6 +70,7 @@ function init()
 	if (SCAexist.name == "sCAnalyzer")
 	{	
 		script.log("SCAnalyzer present");
+		root.modules.sCAnalyzer.scripts.sCAnalyzer.reload.trigger();
 		var ledfxcontainer = SCAexist.parameters.getChild("LedFX Params");
 		ledfxcontainer.setCollapsed(false);
 	
@@ -74,27 +78,6 @@ function init()
 			
 		script.log('No SCAanalyzer found');			
 	}
-
-	var infos = util.getOSInfos(); 
-	
-	script.log("Hello "+infos.username);	
-	script.log("We run under : "+infos.name);
-	
-	// start ledFX if required : only for Windows
-	if (infos.name.contains("Windows"))
-	{
-		var isRunning = root.modules.os.isProcessRunning(LedFXExeName);
-		
-		if ( isRunning == 0 ) {
-			
-					script.log("LedFX is not running ");
-					util.showYesNoCancelBox("confirmLedFX", "LedFX is not running .... ?", "Do you want to start it ?", "warning", "Yes", "No", "Don't care...");
-					
-		} else {
-			 
-					script.log("LedFX is running ");
-		}
-	}	
 	
 	// create dashboard if not already
 	ledFXdashboard();
@@ -108,8 +91,8 @@ function messageBoxCallback(id, result)
 	if (id=="confirmLedFX")
 	{
 		if (result==1){
-					var launchresult = root.modules.os.launchProcess(LedFXPath+LedFXExeName, false);					
-					script.log("LedFX return code : "+launchresult);					
+			var launchresult = root.modules.os.launchApp(LedFXPath+LedFXExeName);					
+			script.log("LedFX return code : "+launchresult);					
 		}
 	}
 }
@@ -125,15 +108,57 @@ function moduleParameterChanged (param)
 	
 }
 
+function update()
+{
+	if (isInit === true)
+	{ 
+		if (SCAexist.name == "sCAnalyzer")
+		{
+			util.showMessageBox("LEDFX !", "SCAnalyzer present, you need to reload its script", "warning", "OK");
+		}
+
+		var infos = util.getOSInfos(); 
+		
+		script.log("Hello "+infos.username);	
+		script.log("We run under : "+infos.name);
+		
+		// start ledFX if required : only for Windows
+		if (infos.name.contains("Windows"))
+		{
+			var isRunning = root.modules.os.isProcessRunning(LedFXExeName);
+			LedFXPath = util.getEnvironmentVariable("LOCALAPPDATA") + "/Programs/ledfx/";
+			
+			if ( isRunning == 0 ) {
+				
+				script.log("LedFX is not running ");
+				util.showYesNoCancelBox("confirmLedFX", "LedFX is not running .... ?", "Do you want to start it ?", "warning", "Yes", "No", "Don't care...");
+						
+			} else {
+				 
+				script.log("LedFX is running ");
+			}
+		}	
+
+		isInit = false;
+		script.log("isinit");
+	}
+}
+
 /*
  Global Ledfx
 */
 
-// Toogle global ledfx play On or Pause
-function LedfxOnOff()
+// Put global LedFX play On or Pause
+function LedfxOnOff(play)
 {
-	script.log("-- Custom command Toogle LedFX");
-	
+	script.log("-- Custom command On/Off LedFX");
+	if (play === true)
+	{
+		payload.active = true;
+	} else {
+		payload.active = false;
+	}
+
 	sendPUTValue(LedFXvirtual_url);  
 }
 
@@ -269,9 +294,10 @@ function ledFXdashboard()
 
 		script.log("Creating LedFX dashboard");
 		var newdash = root.dashboards.addItem();
+		newdash.dashboard.canvasSize.set(800,600);
 		var newiframe = newdash.dashboard.addItem("IFrame"); 
 		newiframe.url.set('http://127.0.0.1:8888');
-		newiframe.viewUISize.set(900,500);
+		newiframe.viewUISize.set(800,600);
 
 		newdash.setName("LedFX Web Page");
 
