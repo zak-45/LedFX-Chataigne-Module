@@ -135,7 +135,7 @@
 		},		
 
 		
-		"De/Activate ":
+		"DeActivate ":
 		{
 			"menu":"LedFX-Scene",
 			"callback":"SceneOnOff",
@@ -170,10 +170,18 @@
 		},		
 
 
-		"Toogle Ledfx Play On/Off ":
+		"Ledfx Play On/Off ":
 		{
 			"menu":"LedFX-Main",
-			"callback":"LedfxOnOff"
-		},		
+			"callback":"LedfxOnOff",
+			"parameters":{
+				"play": {
+					"type": "Boolean",
+					"description": "Checked will put LedFX On... otherwise Paused it",					
+					"default": true, 
+					"useForMapping": false
+				}
+			}
+		}
 	}
 }
