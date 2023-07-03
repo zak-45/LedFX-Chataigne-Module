@@ -28,8 +28,6 @@ var LedFXPath = "";
 var SCAexist = root.modules.getItemWithName("SCAnalyzer");
 // to made some logic only once at init
 var isInit = true;
-var firstStatus = 1;
-var ledfxStatus = 1;
 
 //We create necessary entries in modules & sequences. We need OS / Sound Card / HTTP and  Sequence with Trigger / Audio.
 function init()
@@ -73,19 +71,20 @@ function init()
 	if (SCAexist.name == "sCAnalyzer")
 	{	
 		script.log("SCAnalyzer present");
-		root.modules.sCAnalyzer.scripts.sCAnalyzer.reload.trigger();
+		//root.modules.sCAnalyzer.scripts.sCAnalyzer.reload.trigger();
 		var ledfxcontainer = SCAexist.parameters.getChild("LedFX Params");
 		ledfxcontainer.setCollapsed(false);
 	
 	} else {
 			
-		script.log('No SCAanalyzer found');			
+		script.log('No SCAnalyzer found');			
 	}
 	
 	// create dashboard if not already
 	ledFXdashboard();
 }
 
+/*
 // execution depend on the user response
 function messageBoxCallback(id, result)
 {
@@ -99,6 +98,7 @@ function messageBoxCallback(id, result)
 		}
 	}
 }
+*/
 
 function moduleParameterChanged (param)
 {	
@@ -112,8 +112,7 @@ function moduleParameterChanged (param)
 		
 		script.log("Ledfx status changed to : " + local.parameters.ledFXPaused.get());
 
-	}
-	
+	}	
 }
 
 function scriptParameterChanged (param)
@@ -137,7 +136,7 @@ function update()
 	{ 
 		if (SCAexist.name == "sCAnalyzer")
 		{
-			util.showMessageBox("LEDFX !", "SCAnalyzer present, you need to reload its script", "warning", "OK");
+			// util.showMessageBox("LEDFX !", "SCAnalyzer present, you need to reload its script", "warning", "OK");
 		}
 
 		var infos = util.getOSInfos(); 		
@@ -154,7 +153,8 @@ function update()
 			if ( isRunning == 0 ) {
 				
 				script.log("LedFX is not running ");
-				util.showYesNoCancelBox("confirmLedFX", "LedFX is not running .... ?", "Do you want to start it ?", "warning", "Yes", "No", "Don't care...");
+				// util.showYesNoCancelBox("confirmLedFX", "LedFX is not running .... ?", "Do you want to start it ?", "warning", "Yes", "No", "Don't care...");
+				util.showMessageBox("LedFX","LedFX is not running .... ?", "warning", "Ok");				
 						
 			} else {
 				 
@@ -355,7 +355,7 @@ function ledFXdashboard()
 // This function will be called each time data has been received.
 function dataEvent(data, requestURL)
 {
-	if (requestURL.contains("virtuals"))
+	if (requestURL.contains("/virtuals"))
 	{
 		script.log("Ledfx Status : " + data.paused);
 		local.parameters.ledFXPaused.setAttribute("readOnly", false);
@@ -364,8 +364,5 @@ function dataEvent(data, requestURL)
 	}
 }
 
-function test()
-{
-	script.log("status : " + ledfxStatus);
-}
+
 
