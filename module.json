@@ -3,7 +3,7 @@
 	"type": "HTTP",
 	"path": "Software",
 	
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "send CMD to your LedFX",
 	"url":"",
 	"downloadURL": "",
@@ -46,7 +46,7 @@
 	
 	"commands": {
 		
-		"Switch On/Off ":
+		"Switch On/Off":
 		{
 			"menu":"LedFX-Virtual",
 			"callback":"VirtualOnOff",
@@ -66,7 +66,7 @@
 			}
 		},		
 
-		"Apply Effect ":
+		"Apply Effect":
 		{
 			"menu":"LedFX-Virtual",
 			"callback":"VirtualEffect",
@@ -117,7 +117,7 @@
 			}
 		},		
 
-		"Remove Effect ":
+		"Remove Effect":
 		{
 			"menu":"LedFX-Virtual",
 			"callback":"VirtualRemoveEffect",
@@ -132,15 +132,15 @@
 		},		
 
 
-		"List All ":
+		"List All":
 		{
 			"menu":"LedFX-Virtual",
-			"callback":"VirtualList"
+			"callback":"virtualsList"
 
 		},		
 
 		
-		"DeActivate ":
+		"DeActivate":
 		{
 			"menu":"LedFX-Scene",
 			"callback":"SceneOnOff",
@@ -163,7 +163,7 @@
 		"List All Scene":
 		{
 			"menu":"LedFX-Scene",
-			"callback":"SceneList"
+			"callback":"scenesList"
 
 		},		
 		
@@ -175,7 +175,7 @@
 		},		
 
 
-		"Ledfx Play On/Off ":
+		"Ledfx Play On/Off":
 		{
 			"menu":"LedFX-Main",
 			"callback":"LedfxOnOff",
@@ -187,6 +187,19 @@
 					"useForMapping": false
 				}
 			}
-		}
+		},
+		"Ledfx restart":
+		{
+			"menu":"LedFX-Main",
+			"callback":"LedfxRestart",
+			"parameters":{
+				"restart": {
+					"type": "Boolean",
+					"description": "Checked will restart LedFX.",					
+					"default": false, 
+					"useForMapping": false
+				}
+			}
+		}		
 	}
 }

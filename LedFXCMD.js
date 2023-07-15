@@ -2,7 +2,7 @@
 
 a:zak45
 d:25/10/2022
-v:1.0.0
+v:1.1.0
 
 Chataigne Module for LedFX
 This module connect to ledfx api and let you modify LedFX like virtual On/Off, Effects ...
@@ -23,7 +23,7 @@ var LedFXdevice_url = "/devices";
 var LedFXpower_url = "/power";
 // Windows specific
 var LedFXExeName = "ledfx.exe";
-var LedFXPath = "";
+var ledFXPath = "";
 //SCAnalyzer
 var SCAexist = root.modules.getItemWithName("SCAnalyzer");
 // to made some logic only once at init
@@ -93,7 +93,7 @@ function messageBoxCallback(id, result)
 	if (id=="confirmLedFX")
 	{
 		if (result==1){
-			var launchresult = root.modules.os.launchApp(LedFXPath+LedFXExeName);					
+			var launchresult = root.modules.os.launchApp(ledFXPath+LedFXExeName);					
 			script.log("LedFX return code : "+launchresult);					
 		}
 	}
@@ -110,8 +110,17 @@ function moduleParameterChanged (param)
 		
 	} else if (param.name == "ledFXPaused") {
 		
-		script.log("Ledfx status changed to : " + local.parameters.ledFXPaused.get());
-
+		var ledfxStatus = local.parameters.ledFXPaused.get();
+		script.log("Ledfx status changed to : " + ledfxStatus);
+		
+		if (ledfxStatus == 1)
+		{
+			local.color.set([162/255, 114/255, 16/255, 255/255]);
+			
+		} else {
+			
+			local.color.set([4/255, 162/255, 25/255, 255/255]);
+		}
 	}	
 }
 
@@ -134,35 +143,67 @@ function update()
 {
 	if (isInit === true)
 	{ 
-		if (SCAexist.name == "sCAnalyzer")
-		{
-			// util.showMessageBox("LEDFX !", "SCAnalyzer present, you need to reload its script", "warning", "OK");
-		}
 
 		var infos = util.getOSInfos(); 		
 			
 		script.log("Hello "+infos.username);	
 		script.log("We run under : "+infos.name);
 		
-		// start ledFX if required : only for Windows
+		// check ledFX process
 		if (infos.name.contains("Windows"))
-		{
+		{			
 			var isRunning = root.modules.os.isProcessRunning(LedFXExeName);
-			LedFXPath = util.getEnvironmentVariable("LOCALAPPDATA") + "/Programs/ledfx/";
+			ledFXPath = util.getEnvironmentVariable("LOCALAPPDATA") + "/Programs/ledfx/";
 			
 			if ( isRunning == 0 ) {
 				
 				script.log("LedFX is not running ");
 				// util.showYesNoCancelBox("confirmLedFX", "LedFX is not running .... ?", "Do you want to start it ?", "warning", "Yes", "No", "Don't care...");
+				local.color.set([162/255, 23/255, 12/255, 255/255]);
 				util.showMessageBox("LedFX","LedFX is not running .... ?", "warning", "Ok");				
 						
 			} else {
 				 
 				script.log("LedFX is running ");
+				local.color.set([4/255, 162/255, 25/255, 255/255]);
 				// check status
-				LedfxStatus();
+				ledFXStatus();
+				scenesList();
+				virtualsList();				
 			}
-		}	
+			
+		} else {
+
+			var checkProcess = root.modules.os.getRunningProcesses("*");
+			var ledFXIsRunning = false;
+			var ledFXProcessName = "ledfx";
+			
+			for ( var i = 0; i < checkProcess.length; i ++)
+			{
+				if (checkProcess[i].contains(ledFXProcessName))
+				{
+					ledFXIsRunning = true;					
+					break;
+				}				
+			}
+
+			if (ledFXIsRunning === false) 
+			{
+				script.log("LedFX is not running ");
+				// util.showYesNoCancelBox("confirmLedFX", "LedFX is not running .... ?", "Do you want to start it ?", "warning", "Yes", "No", "Don't care...");
+				local.color.set([162/255, 23/255, 12/255, 255/255]);
+				util.showMessageBox("LedFX","LedFX is not running .... ?", "warning", "Ok");
+				
+			} else {
+
+				script.log("LedFX is running ");
+				local.color.set([4/255, 162/255, 25/255, 255/255]);
+				// check status
+				ledFXStatus();
+				scenesList();
+				virtualsList();					
+			}			
+		}
 
 		isInit = false;
 		script.log("isinit");
@@ -177,29 +218,37 @@ function update()
 function LedfxOnOff(play)
 {
 	script.log("-- Custom command On/Off LedFX", play);
-	if (play === true)
+	
+	var actualStatus = local.parameters.ledFXPaused.get();	
+	if ((play == 1 && actualStatus == 1) || (play == 0 && actualStatus == 0) )
 	{
+		script.log('update play status');
+		payload = {};
+		params.payload = payload;
 		payload.active = true;
-	} else {
-		payload.active = false;
+		sendPUTValue(LedFXvirtual_url);  
 	}
-
-	sendPUTValue(LedFXvirtual_url);  
 }
 
 // restart {"timeout":1,"action":"restart"}
-function LedfxRestart()
+function LedfxRestart(restart)
 {
 	script.log("-- Custom command restart LedFX");
+	ledFXStatus();
+	if (restart == 1)
+	{
+		payload = {};
+		params.payload = payload;
+		payload.timeout = 1;
+		payload.action = "restart";
+		script.log("command sent");
 
-	payload.timeout = 1;
-	payload.action = "restart";
-
-	local.sendPOST(LedFXpower_url,params);  
+		local.sendPOST(LedFXpower_url,params);  
+	}
 }
 
 // Get Ledfx Status
-function LedfxStatus()
+function ledFXStatus()
 {
 	script.log("-- Custom command Status LedFX");
 
@@ -217,7 +266,8 @@ function LedfxStatus()
 function SceneOnOff(scenename,activate)
 {
 	script.log("-- Custom command scene activation: "+scenename);
-	var payload = {}; //the payload can be either a simple string or an object that will be automatically stringified
+	
+	payload = {};
 	params.payload = payload;
 	payload.id = scenename;	
   
@@ -234,9 +284,10 @@ function SceneOnOff(scenename,activate)
 }
 
 // List all scenes and populate root.modules.ledfx.values
-function SceneList()
+function scenesList()
 {   
 	script.log("-- Custom command scene List");
+	ledFXStatus();
 	
 	local.parameters.autoAdd.set(1);
 	local.values.setCollapsed(true);
@@ -252,9 +303,9 @@ function SceneList()
 function VirtualOnOff(devicename,OnOff)
 {
 	script.log("-- Custom command virtual OnOff: ")+devicename;
-  
+	
 	local.parameters.autoAdd.set(1);  
-	var payload = {}; //the payload can be either a simple string or an object that will be automatically stringified
+	payload = {};
 	params.payload = payload;
 	payload.active = OnOff;
   
@@ -265,6 +316,7 @@ function VirtualOnOff(devicename,OnOff)
 function VirtualEffect(devicename,effect)
 {   
 	script.log("-- Custom command virtual Effect:"+effect);	
+	ledFXStatus();
 	
 	local.parameters.autoAdd.set(1);
 	var payload = {}; //the payload can be either a simple string or an object that will be automatically stringified
@@ -278,6 +330,7 @@ function VirtualEffect(devicename,effect)
 function VirtualRemoveEffect(devicename)
 {   
 	script.log("-- Custom command virtual remove Effect: "+devicename);	
+	ledFXStatus();
 	
 	local.parameters.autoAdd.set(1);	
     var payload = {}; //the payload can be either a simple string or an object that will be automatically stringified
@@ -288,9 +341,10 @@ function VirtualRemoveEffect(devicename)
 }
 
 //We get all virtual devices and populate root.modules.ledfx.values
-function VirtualList()
+function virtualsList()
 {   
 	script.log("-- Custom command virtual List");
+	ledFXStatus();
 	
 	local.parameters.autoAdd.set(1);
 	local.values.setCollapsed(true);
@@ -307,6 +361,7 @@ function VirtualList()
 function DeviceList()
 {   
 	script.log("-- Custom command Device List");
+	ledFXStatus();
 	
 	local.parameters.autoAdd.set(1);
 	local.values.setCollapsed(true);
@@ -321,15 +376,19 @@ function DeviceList()
 function sendPUTValue(value)
 {   
 	script.log("-- Custom command called with value :" + value);
-	
-	//local.parameters.autoAdd.set(1);
+	local.parameters.autoAdd.set(1);
+	ledFXStatus();
 	
 	local.sendPUT(value,params);
 }
 
+ 
+/*
+util
+*/
+
 function ledFXdashboard()
 {
-	
 	var dashExist = root.dashboards.getItemWithName("ledFXWebPage");
 	
 	if (dashExist.name == "ledFXWebPage"){
@@ -340,10 +399,11 @@ function ledFXdashboard()
 
 		script.log("Creating LedFX dashboard");
 		var newdash = root.dashboards.addItem();
-		newdash.dashboard.canvasSize.set(800,600);
+		newdash.dashboard.canvasSize.set(600,400);
 		var newiframe = newdash.dashboard.addItem("IFrame"); 
-		newiframe.url.set('http://127.0.0.1:8888');
-		newiframe.viewUISize.set(800,600);
+		newiframe.url.set('http://127.0.0.1:8888');		
+		newiframe.viewUIPosition.set(-300,-200);
+		newiframe.viewUISize.set(600,400);
 
 		newdash.setName("LedFX Web Page");
 
@@ -351,16 +411,18 @@ function ledFXdashboard()
 	}
 }
  
- 
-// This function will be called each time data has been received.
+// This function will be called each time data has been received by HTTP request.
 function dataEvent(data, requestURL)
 {
 	if (requestURL.contains("/virtuals"))
 	{
-		script.log("Ledfx Status : " + data.paused);
-		local.parameters.ledFXPaused.setAttribute("readOnly", false);
-		local.parameters.ledFXPaused.set(data.paused);
-		local.parameters.ledFXPaused.setAttribute("readOnly", true);
+		if (data.paused != "undefined")
+		{
+			script.log("Ledfx Status : " + data.paused);
+			local.parameters.ledFXPaused.setAttribute("readOnly", false);
+			local.parameters.ledFXPaused.set(data.paused);
+			local.parameters.ledFXPaused.setAttribute("readOnly", true);			
+		}
 	}
 }
 
