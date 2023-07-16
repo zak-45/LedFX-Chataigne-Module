@@ -150,8 +150,6 @@ function update()
 				 
 				script.log("LedFX is running ");
 				local.color.set([4/255, 162/255, 25/255, 255/255]);
-				// check status
-				ledFXStatus();
 				scenesList();
 				virtualsList();				
 			}
@@ -182,8 +180,6 @@ function update()
 
 				script.log("LedFX is running ");
 				local.color.set([4/255, 162/255, 25/255, 255/255]);
-				// check status
-				ledFXStatus();
 				scenesList();
 				virtualsList();					
 			}			
