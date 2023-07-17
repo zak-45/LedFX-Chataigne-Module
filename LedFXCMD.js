@@ -243,7 +243,7 @@ function ledFXStatus()
 
 // Acivate or not a scene
 //{"id":"testscene","action":"activate"}
-function SceneOnOff(scenename,activate)
+function SceneOnOff(activate, scenename)
 {
 	script.log("-- Custom command scene activation: "+scenename);
 	
@@ -280,7 +280,7 @@ function scenesList()
 */
 
 // Virtual device switch On/Off
-function VirtualOnOff(devicename,OnOff)
+function VirtualOnOff(OnOff, devicename)
 {
 	script.log("-- Custom command virtual OnOff: ")+devicename;
 	
@@ -293,7 +293,7 @@ function VirtualOnOff(devicename,OnOff)
 }
 
 // Apply effect to virtual device
-function VirtualEffect(devicename,effect)
+function VirtualEffect(effect, devicename)
 {   
 	script.log("-- Custom command virtual Effect:"+effect);	
 	ledFXStatus();
@@ -338,7 +338,7 @@ function virtualsList()
 */
 
 //We get all  devices and populate root.modules.ledfx.values  (possible bug!!!)
-function DeviceList()
+function deviceList()
 {   
 	script.log("-- Custom command Device List");
 	ledFXStatus();
@@ -397,5 +397,33 @@ function dataEvent(data, requestURL)
 	{
 		script.log("Got Ledfx Status : " + data.paused);
 		local.parameters.ledFXPaused.set(data.paused);
+	}	
+}
+
+function createDeviceList(command)
+{
+	script.log('Generate LedfX virtual devices list');
+	virtualsList();
+	var devList = command.addEnumParameter("devicename","Select virtual device");
+	devList.addOption("none","none");
+
+	var virtualDevicesList = util.getObjectProperties(root.modules.ledFX.values.virtuals, true, false);
+	for ( var i = 0; i < virtualDevicesList.length ; i++)		
+	{	
+		devList.addOption(virtualDevicesList[i],virtualDevicesList[i]);
+	}	
+}
+
+function createSceneList(command)
+{
+	script.log('Generate LedfX scenes list');
+	scenesList();
+	var sceList = command.addEnumParameter("scenename","Select scene name");
+	sceList.addOption("none","none");
+
+	var scenesEnumList = util.getObjectProperties(root.modules.ledFX.values.scenes, true, false);
+	for ( var i = 0; i < scenesEnumList.length ; i++)		
+	{	
+		sceList.addOption(scenesEnumList[i],scenesEnumList[i]);
 	}	
 }

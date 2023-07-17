@@ -32,6 +32,7 @@
 			"LedFX Paused": {
 				"type": "Boolean",
 				"description": "True if LedFX is on Pause",
+				"default": true,
 				"readOnly": true
 			}			
 	},
@@ -50,13 +51,8 @@
 		{
 			"menu":"LedFX-Virtual",
 			"callback":"VirtualOnOff",
+			"setupCallback":"createDeviceList",
 			"parameters": {
-				"devicename": {
-					"type": "String",
-					"default": "mydevicename", 
-					"description": "Virtual Device Name",
-					"useForMapping": false
-				},
 				"OnOff": {
 					"type": "Boolean",
 					"default": false, 
@@ -70,13 +66,8 @@
 		{
 			"menu":"LedFX-Virtual",
 			"callback":"VirtualEffect",
+			"setupCallback":"createDeviceList",
 			"parameters": {
-				"devicename": {
-					"type": "String",
-					"default": "mydevicename", 
-					"description": "Virtual Device Name",					
-					"useForMapping": false
-				},
 				
 				"effect": { 
 					"type":"Enum", 
@@ -115,42 +106,25 @@
 					"default": "gradient"
 						},
 			}
-		},		
-
+		},
 		"Remove Effect":
 		{
 			"menu":"LedFX-Virtual",
 			"callback":"VirtualRemoveEffect",
-			"parameters": {
-				"devicename": {
-					"type": "String",
-					"default": "mydevicename", 
-					"description": "Virtual Device Name to remove Effect",
-					"useForMapping": false
-				},
-			}
-		},		
-
-
+			"setupCallback":"createDeviceList"			
+		},
 		"List All":
 		{
 			"menu":"LedFX-Virtual",
 			"callback":"virtualsList"
 
-		},		
-
-		
-		"DeActivate":
+		},
+		"De_Activate":
 		{
 			"menu":"LedFX-Scene",
 			"callback":"SceneOnOff",
+			"setupCallback":"createSceneList",
 			"parameters": {
-				"scenename": {
-					"type": "String",
-					"default": "myscenename", 
-					"description": "Scene Name",					
-					"useForMapping": false
-				},
 				"activate": {
 					"type": "Boolean",
 					"description": "Checked will activate the Scene",					
@@ -170,7 +144,7 @@
 		"List All Device":
 		{
 			"menu":"LedFX-Device",
-			"callback":"DeviceList"
+			"callback":"deviceList"
 
 		},		
 
