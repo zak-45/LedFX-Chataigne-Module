@@ -99,6 +99,13 @@ function messageBoxCallback(id, result)
 }
 */
 
+function moduleValueChanged (param)
+{	
+	// script.log("Param value changed : "+param.name);
+}
+
+
+
 function moduleParameterChanged (param)
 {	
 	script.log("Param changed : "+param.name);
@@ -109,10 +116,10 @@ function moduleParameterChanged (param)
 		
 	} else if (param.name == "ledFXPaused") {
 		
-		var ledfxStatus = local.parameters.ledFXPaused.get();
-		script.log("Ledfx status changed to : " + ledfxStatus);
+		var myStatus = local.parameters.ledFXPaused.get();
+		script.log("Ledfx status changed to : " + myStatus);
 		
-		if (ledfxStatus == 1)
+		if (myStatus == 1)
 		{
 			local.color.set([162/255, 114/255, 16/255, 255/255]);
 			
@@ -215,7 +222,9 @@ function LedfxOnOff(play)
 function LedfxRestart(restart)
 {
 	script.log("-- Custom command restart LedFX");
+	
 	ledFXStatus();
+	
 	if (restart == 1)
 	{
 		payload = {};
@@ -232,9 +241,10 @@ function LedfxRestart(restart)
 function ledFXStatus()
 {
 	script.log("-- Custom command Status LedFX");
+	local.parameters.autoAdd.set(1);	
+	local.parameters.clearValues.trigger();
 
-	local.sendGET(LedFXvirtual_url);
-	
+	local.sendGET(LedFXvirtual_url);	
 }
 
 /*
@@ -248,9 +258,7 @@ function SceneOnOff(activate, scenename)
 	script.log("-- Custom command scene activation: "+scenename);
 	
 	payload = {};
-	payload.id = scenename;	
-	params.payload = payload;
-  
+	payload.id = scenename;	  
 	if (activate == 1) 
 	{
 		payload.action = "activate";
@@ -259,6 +267,7 @@ function SceneOnOff(activate, scenename)
 		
 		payload.action = "deactivate";
 	}
+	params.payload = payload;
 	  
 	sendPUTValue(LedFXscene_url);
 }
@@ -267,12 +276,13 @@ function SceneOnOff(activate, scenename)
 function scenesList()
 {   
 	script.log("-- Custom command scene List");
-	ledFXStatus();
 	
-	local.parameters.autoAdd.set(1);
+	ledFXStatus();	
+	
 	local.values.setCollapsed(true);
 	
 	local.sendGET(LedFXscene_url,"json","Connection: keep-alive","");
+	util.delayThreadMS(100);
 }
 
 /*
@@ -298,7 +308,6 @@ function VirtualEffect(effect, devicename)
 	script.log("-- Custom command virtual Effect:"+effect);	
 	ledFXStatus();
 	
-	local.parameters.autoAdd.set(1);
 	payload = {};
 	payload.type=effect;
     params.payload = payload;
@@ -312,7 +321,6 @@ function VirtualRemoveEffect(devicename)
 	script.log("-- Custom command virtual remove Effect: "+devicename);	
 	ledFXStatus();
 	
-	local.parameters.autoAdd.set(1);	
     payload = {};
 	payload.type=effect;
     params.payload = payload;
@@ -323,13 +331,13 @@ function VirtualRemoveEffect(devicename)
 //We get all virtual devices and populate root.modules.ledfx.values
 function virtualsList()
 {   
-	script.log("-- Custom command virtual List");
-	ledFXStatus();
-	
-	local.parameters.autoAdd.set(1);
+	script.log("-- Custom command virtual List");	
+	ledFXStatus();	
+
 	local.values.setCollapsed(true);
 
 	local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");
+	util.delayThreadMS(100);
 }
 
 /*
@@ -340,10 +348,9 @@ function virtualsList()
 //We get all  devices and populate root.modules.ledfx.values  (possible bug!!!)
 function deviceList()
 {   
-	script.log("-- Custom command Device List");
+	script.log("-- Custom command Device List");	
 	ledFXStatus();
-	
-	local.parameters.autoAdd.set(1);
+		
 	local.values.setCollapsed(true);
 	
 	local.sendGET(LedFXdevice_url,"json","Connection: keep-alive","");
@@ -356,7 +363,6 @@ function deviceList()
 function sendPUTValue(value)
 {   
 	script.log("-- Custom command called with value :" + value);
-	local.parameters.autoAdd.set(1);
 	ledFXStatus();
 	
 	local.sendPUT(value,params);
@@ -403,15 +409,15 @@ function dataEvent(data, requestURL)
 function createDeviceList(command)
 {
 	script.log('Generate LedfX virtual devices list');
-	virtualsList();
+	virtualsList();	
 	var devList = command.addEnumParameter("devicename","Select virtual device");
 	devList.addOption("none","none");
 
-	var virtualDevicesList = util.getObjectProperties(root.modules.ledFX.values.virtuals, true, false);
+	var virtualDevicesList = util.getObjectProperties(local.values.virtuals, true, false);
 	for ( var i = 0; i < virtualDevicesList.length ; i++)		
 	{	
 		devList.addOption(virtualDevicesList[i],virtualDevicesList[i]);
-	}	
+	}
 }
 
 function createSceneList(command)
@@ -421,9 +427,17 @@ function createSceneList(command)
 	var sceList = command.addEnumParameter("scenename","Select scene name");
 	sceList.addOption("none","none");
 
-	var scenesEnumList = util.getObjectProperties(root.modules.ledFX.values.scenes, true, false);
+	var scenesEnumList = util.getObjectProperties(local.values.scenes, true, false);
 	for ( var i = 0; i < scenesEnumList.length ; i++)		
 	{	
 		sceList.addOption(scenesEnumList[i],scenesEnumList[i]);
-	}	
+	}
+}
+function test()
+{
+	var mvirtualDevicesList = util.getObjectProperties(local.values.virtuals, true, false);
+	var testValues = local.values.getChild("virtuals");
+	
+	script.log("mmm" + mvirtualDevicesList);
+	script.log("mmm" + testValues.name);
 }
