@@ -104,28 +104,6 @@ function messageBoxCallback(id, result)
 }
 */
 
-function checkLedFX ()
-{	
-	var testStatusValues = local.values.getChild("status");
-	var testScenesValues = local.values.getChild("scenes");
-	var testVirtualsValues = local.values.getChild("virtuals");	
-	
-	if(	testStatusValues.name == "undefined" && 
-		testScenesValues.name == "undefined" &&
-		testVirtualsValues.name == "undefined" )
-	{
-		script.log("Not able to reach LedFX");
-		local.color.set([162/255, 23/255, 12/255, 255/255]);
-		
-	} else {
-		
-		script.log("LedFX reachable");
-		local.color.set([4/255, 162/255, 25/255, 255/255]);		
-	}
-	
-	checkStatus = false;	
-}
-
 function moduleParameterChanged (param)
 {	
 	script.log("Param changed : "+param.name);
@@ -176,7 +154,8 @@ function update()
 			} else {
 				 
 				script.log("LedFX is running ");
-				local.color.set([4/255, 162/255, 25/255, 255/255]);		
+				virtualsList();
+				local.color.set([4/255, 162/255, 25/255, 255/255]);				
 			}
 			
 		} else {
@@ -204,6 +183,7 @@ function update()
 			} else {
 
 				script.log("LedFX is running ");
+				virtualsList();
 				local.color.set([4/255, 162/255, 25/255, 255/255]);
 			}			
 		}
@@ -245,27 +225,17 @@ function LedfxRestart(restart)
 {
 	script.log("-- Custom command restart LedFX");
 	
-	ledFXStatus();
-	
 	if (restart == 1)
 	{
+		ledFXStatus();
+		
 		payload = {};
 		payload.timeout = 1;
 		payload.action = "restart";
 		params.payload = payload;
-		
-		script.log("command sent");
+
 		local.sendPOST(LedFXpower_url,params);  
 	}
-}
-
-// Get Ledfx Status
-function ledFXStatus()
-{
-	script.log("-- Custom command Status LedFX");
-	local.parameters.clearValues.trigger();
-	local.parameters.autoAdd.set(1);
-	checkStatus = true;
 }
 
 /*
@@ -393,6 +363,42 @@ function sendPUTValue(value)
 util
 */
 
+// Get Ledfx Status
+function ledFXStatus()
+{
+	script.log("-- Custom command Status LedFX");
+	local.parameters.clearValues.trigger();
+	local.parameters.autoAdd.set(1);
+	checkStatus = true;
+}
+
+function checkLedFX ()
+{
+	var testStatusValues = local.values.getChild("status");
+	var testScenesValues = local.values.getChild("scenes");
+	var testVirtualsValues = local.values.getChild("virtuals");	
+	
+	if(	testStatusValues.name == "undefined" && 
+		testScenesValues.name == "undefined" &&
+		testVirtualsValues.name == "undefined" )
+	{
+		script.log("Not able to reach LedFX");
+		local.color.set([162/255, 23/255, 12/255, 255/255]);
+		
+	} else if (local.parameters.ledFXPaused.get() == 0) {
+		
+		script.log("LedFX reachable");
+		local.color.set([4/255, 162/255, 25/255, 255/255]);		
+		
+	} else if (local.parameters.ledFXPaused.get() == 1) {
+		
+		script.log("LedFX reachable but on Pause Mode");
+		local.color.set([162/255, 114/255, 16/255, 255/255]);		
+	}
+
+	checkStatus = false;
+}
+
 function ledFXdashboard()
 {
 	var dashExist = root.dashboards.getItemWithName("ledFXWebPage");
@@ -430,7 +436,6 @@ function dataEvent(data, requestURL)
 function createDeviceList(command)
 {
 	script.log('Generate LedfX virtual devices list');
-	virtualsList();	
 	
 	var devList = command.addEnumParameter("devicename","Select virtual device");
 	devList.addOption("none","none");
@@ -445,7 +450,6 @@ function createDeviceList(command)
 function createSceneList(command)
 {
 	script.log('Generate LedfX scenes list');
-	scenesList();
 	
 	var sceList = command.addEnumParameter("scenename","Select scene name");
 	sceList.addOption("none","none");
@@ -456,6 +460,7 @@ function createSceneList(command)
 		sceList.addOption(scenesEnumList[i],scenesEnumList[i]);
 	}
 }
+
 function test()
 {
 	var mvirtualDevicesList = util.getObjectProperties(local.values.virtuals, true, false);

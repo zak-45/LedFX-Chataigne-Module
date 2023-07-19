@@ -34,7 +34,7 @@
 				"description": "True if LedFX is on Pause",
 				"default": true,
 				"readOnly": true
-			}			
+			}		
 	},
 
 	"values": {	
