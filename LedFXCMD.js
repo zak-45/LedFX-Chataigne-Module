@@ -2,7 +2,7 @@
 
 a:zak45
 d:25/10/2022
-v:1.1.0
+v:1.2.0
 
 Chataigne Module for LedFX
 This module connect to ledfx api and let you modify LedFX like virtual On/Off, Effects ...
@@ -28,6 +28,8 @@ var ledFXPath = "";
 var SCAexist = root.modules.getItemWithName("SCAnalyzer");
 // to made some logic only once at init
 var isInit = true;
+// 
+var checkStatus = false;
 
 //We create necessary entries in modules & sequences. We need OS / Sound Card / HTTP and  Sequence with Trigger / Audio.
 function init()
@@ -81,6 +83,9 @@ function init()
 	
 	// create dashboard if not already
 	ledFXdashboard();
+	
+	// update rate 
+	script.setUpdateRate(1);
 }
 
 /*
@@ -99,12 +104,27 @@ function messageBoxCallback(id, result)
 }
 */
 
-function moduleValueChanged (param)
+function checkLedFX ()
 {	
-	// script.log("Param value changed : "+param.name);
+	var testStatusValues = local.values.getChild("status");
+	var testScenesValues = local.values.getChild("scenes");
+	var testVirtualsValues = local.values.getChild("virtuals");	
+	
+	if(	testStatusValues.name == "undefined" && 
+		testScenesValues.name == "undefined" &&
+		testVirtualsValues.name == "undefined" )
+	{
+		script.log("Not able to reach LedFX");
+		local.color.set([162/255, 23/255, 12/255, 255/255]);
+		
+	} else {
+		
+		script.log("LedFX reachable");
+		local.color.set([4/255, 162/255, 25/255, 255/255]);		
+	}
+	
+	checkStatus = false;	
 }
-
-
 
 function moduleParameterChanged (param)
 {	
@@ -156,9 +176,7 @@ function update()
 			} else {
 				 
 				script.log("LedFX is running ");
-				local.color.set([4/255, 162/255, 25/255, 255/255]);
-				scenesList();
-				virtualsList();				
+				local.color.set([4/255, 162/255, 25/255, 255/255]);		
 			}
 			
 		} else {
@@ -187,14 +205,18 @@ function update()
 
 				script.log("LedFX is running ");
 				local.color.set([4/255, 162/255, 25/255, 255/255]);
-				scenesList();
-				virtualsList();					
 			}			
 		}
 
 		isInit = false;
 		script.log("isinit");
 	}
+	
+	if (checkStatus)
+	{
+		checkLedFX();
+	}
+
 }
 
 /*
@@ -241,10 +263,9 @@ function LedfxRestart(restart)
 function ledFXStatus()
 {
 	script.log("-- Custom command Status LedFX");
-	local.parameters.autoAdd.set(1);	
 	local.parameters.clearValues.trigger();
-
-	local.sendGET(LedFXvirtual_url);	
+	local.parameters.autoAdd.set(1);
+	checkStatus = true;
 }
 
 /*
@@ -282,7 +303,7 @@ function scenesList()
 	local.values.setCollapsed(true);
 	
 	local.sendGET(LedFXscene_url,"json","Connection: keep-alive","");
-	util.delayThreadMS(100);
+	util.delayThreadMS(200);
 }
 
 /*
@@ -337,7 +358,7 @@ function virtualsList()
 	local.values.setCollapsed(true);
 
 	local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");
-	util.delayThreadMS(100);
+	util.delayThreadMS(200);
 }
 
 /*
@@ -410,6 +431,7 @@ function createDeviceList(command)
 {
 	script.log('Generate LedfX virtual devices list');
 	virtualsList();	
+	
 	var devList = command.addEnumParameter("devicename","Select virtual device");
 	devList.addOption("none","none");
 
@@ -424,6 +446,7 @@ function createSceneList(command)
 {
 	script.log('Generate LedfX scenes list');
 	scenesList();
+	
 	var sceList = command.addEnumParameter("scenename","Select scene name");
 	sceList.addOption("none","none");
 
