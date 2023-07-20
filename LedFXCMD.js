@@ -31,6 +31,7 @@ var isInit = true;
 // 
 var checkStatus = false;
 var doRefreshScenes = false;
+var keepValues = false;
 
 //We create necessary entries in modules & sequences. We need OS / Sound Card / HTTP and  Sequence with Trigger / Audio.
 function init()
@@ -237,7 +238,8 @@ function LedfxRestart(restart)
 	
 	if (restart == 1)
 	{
-		ledFXStatus();
+		keepValues = false;
+		ledFXStatus(keepValues);
 		
 		payload = {};
 		payload.timeout = 1;
@@ -277,7 +279,15 @@ function SceneOnOff(activate, scenename)
 function scenesList()
 {   
 	script.log("-- Custom command scene List");	
-	ledFXStatus();	
+	if (isInit === true)
+	{
+		keepValues = true;
+		
+	} else {
+		
+		keepValues = false;		
+	}
+	ledFXStatus(keepValues);	
 	
 	local.values.setCollapsed(true);
 	
@@ -305,7 +315,8 @@ function VirtualOnOff(OnOff, devicename)
 function VirtualEffect(effect, devicename)
 {   
 	script.log("-- Custom command virtual Effect:"+effect);	
-	ledFXStatus();
+	keepValues = false;
+	ledFXStatus(keepValues);
 	
 	payload = {};
 	payload.type=effect;
@@ -318,7 +329,8 @@ function VirtualEffect(effect, devicename)
 function VirtualRemoveEffect(devicename)
 {   
 	script.log("-- Custom command virtual remove Effect: "+devicename);	
-	ledFXStatus();
+	keepValues = false;
+	ledFXStatus(keepValues);
 	
     payload = {};
 	payload.type=effect;
@@ -330,8 +342,16 @@ function VirtualRemoveEffect(devicename)
 //We get all virtual devices and populate root.modules.ledfx.values
 function virtualsList()
 {   
-	script.log("-- Custom command virtual List");	
-	ledFXStatus();	
+	script.log("-- Custom command virtual List");
+	if (isInit === true)
+	{
+		keepValues = true;
+		
+	} else {
+		
+		keepValues = false;		
+	}
+	ledFXStatus(keepValues);	
 
 	local.values.setCollapsed(true);
 
@@ -346,8 +366,9 @@ function virtualsList()
 //We get all  devices and populate root.modules.ledfx.values  (possible bug!!!)
 function deviceList()
 {   
-	script.log("-- Custom command Device List");	
-	ledFXStatus();
+	script.log("-- Custom command Device List");
+	keepValues = false;
+	ledFXStatus(keepValues);
 		
 	local.values.setCollapsed(true);
 	
@@ -361,7 +382,8 @@ function deviceList()
 function sendPUTValue(value)
 {   
 	script.log("-- Custom command called with value :" + value);
-	ledFXStatus();
+	keepValues = false;
+	ledFXStatus(keepValues);
 	
 	local.sendPUT(value,params);
 }
@@ -371,10 +393,13 @@ util
 */
 
 // Get Ledfx Status
-function ledFXStatus()
+function ledFXStatus(keepValues)
 {
 	script.log("-- Custom command Status LedFX");
-	local.parameters.clearValues.trigger();
+	if (keepValues === false)
+	{
+		local.parameters.clearValues.trigger();
+	}
 	local.parameters.autoAdd.set(1);
 	checkStatus = true;
 }
