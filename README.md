@@ -27,3 +27,10 @@ Add the module in Chataigne:
 On command tester, you will have all available commands.
 
 ![image](https://github.com/zak-45/LedFX-Chataigne-Module/assets/121941293/c9eb510d-c234-45c0-b109-95a5015fcb6f)
+
+
+## Videos
+
+LedFX with WLEDAudioSync Demo
+
+https://youtu.be/yu8QgQlLT5g
