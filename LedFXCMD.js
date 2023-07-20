@@ -30,6 +30,7 @@ var SCAexist = root.modules.getItemWithName("SCAnalyzer");
 var isInit = true;
 // 
 var checkStatus = false;
+var doRefreshScenes = false;
 
 //We create necessary entries in modules & sequences. We need OS / Sound Card / HTTP and  Sequence with Trigger / Audio.
 function init()
@@ -132,7 +133,6 @@ function update()
 {
 	if (isInit === true)
 	{ 
-
 		var infos = util.getOSInfos(); 		
 			
 		script.log("Hello "+infos.username);	
@@ -155,6 +155,8 @@ function update()
 				 
 				script.log("LedFX is running ");
 				virtualsList();
+				doRefreshScenes = true;				
+
 				local.color.set([4/255, 162/255, 25/255, 255/255]);				
 			}
 			
@@ -184,19 +186,27 @@ function update()
 
 				script.log("LedFX is running ");
 				virtualsList();
+				doRefreshScenes = true;
+
 				local.color.set([4/255, 162/255, 25/255, 255/255]);
 			}			
 		}
-
-		isInit = false;
+		
 		script.log("isinit");
+		isInit = false;
 	}
-	
-	if (checkStatus)
+
+	if (checkStatus === true && isInit === false)
 	{
+		checkStatus = false;
 		checkLedFX();
 	}
 
+	if (doRefreshScenes === true && isInit === false)
+	{
+		doRefreshScenes = false;
+		scenesList();
+	}	
 }
 
 /*
@@ -266,14 +276,12 @@ function SceneOnOff(activate, scenename)
 // List all scenes and populate root.modules.ledfx.values
 function scenesList()
 {   
-	script.log("-- Custom command scene List");
-	
+	script.log("-- Custom command scene List");	
 	ledFXStatus();	
 	
 	local.values.setCollapsed(true);
 	
 	local.sendGET(LedFXscene_url,"json","Connection: keep-alive","");
-	util.delayThreadMS(200);
 }
 
 /*
@@ -328,7 +336,6 @@ function virtualsList()
 	local.values.setCollapsed(true);
 
 	local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");
-	util.delayThreadMS(200);
 }
 
 /*
@@ -374,31 +381,32 @@ function ledFXStatus()
 
 function checkLedFX ()
 {
-	var testStatusValues = local.values.getChild("status");
-	var testScenesValues = local.values.getChild("scenes");
-	var testVirtualsValues = local.values.getChild("virtuals");	
+	var testValues = local.values.getJSONData();
+	var JSONdata = JSON.stringify(testValues.parameters[0]);
 	
-	if(	testStatusValues.name == "undefined" && 
-		testScenesValues.name == "undefined" &&
-		testVirtualsValues.name == "undefined" )
+	if(JSONdata == "undefined" )
 	{
 		script.log("Not able to reach LedFX");
 		local.color.set([162/255, 23/255, 12/255, 255/255]);
 		
-	} else if (local.parameters.ledFXPaused.get() == 0) {
+	} else {
 		
-		script.log("LedFX reachable");
-		local.color.set([4/255, 162/255, 25/255, 255/255]);		
+		if (local.parameters.ledFXPaused.get() == 0) {
 		
-	} else if (local.parameters.ledFXPaused.get() == 1) {
+			script.log("LedFX reachable");
+			local.color.set([4/255, 162/255, 25/255, 255/255]);		
 		
-		script.log("LedFX reachable but on Pause Mode");
-		local.color.set([162/255, 114/255, 16/255, 255/255]);		
+		} else {
+		
+			script.log("LedFX reachable but on Pause Mode");
+			local.color.set([162/255, 114/255, 16/255, 255/255]);
+		}
 	}
 
 	checkStatus = false;
 }
 
+// create dashboard
 function ledFXdashboard()
 {
 	var dashExist = root.dashboards.getItemWithName("ledFXWebPage");
@@ -433,9 +441,10 @@ function dataEvent(data, requestURL)
 	}	
 }
 
+// this will create devices list (enum) from virtuals value object ( contains last populated values)
 function createDeviceList(command)
 {
-	script.log('Generate LedfX virtual devices list');
+	script.log('Generate LedFX virtual devices command');
 	
 	var devList = command.addEnumParameter("devicename","Select virtual device");
 	devList.addOption("none","none");
@@ -447,9 +456,10 @@ function createDeviceList(command)
 	}
 }
 
+// this will create scenes list (enum) from scenes value object ( contains last populated values)
 function createSceneList(command)
 {
-	script.log('Generate LedfX scenes list');
+	script.log('Generate LedFX scenes command');
 	
 	var sceList = command.addEnumParameter("scenename","Select scene name");
 	sceList.addOption("none","none");
@@ -463,9 +473,17 @@ function createSceneList(command)
 
 function test()
 {
-	var mvirtualDevicesList = util.getObjectProperties(local.values.virtuals, true, false);
-	var testValues = local.values.getChild("virtuals");
+
+	var testValues = local.values.getJSONData();
+	var JSONdata = JSON.stringify(testValues.parameters[0]);
 	
-	script.log("mmm" + mvirtualDevicesList);
-	script.log("mmm" + testValues.name);
+
+	script.log("mmm" + JSONdata);
+	
+	if (JSONdata == "undefined")
+	{
+		script.log('not reachable');
+	} else {
+		script.log('reachable');
+	}
 }
