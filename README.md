@@ -19,3 +19,5 @@ Add the module in Chataigne:
 
 > Software-->LedFX \
 > if default 127.0.0.1 not suit your need, do not forget to change the IP address in Base Address
+
+![image](https://github.com/zak-45/LedFX-Chataigne-Module/assets/121941293/0f917fa6-533c-4f4f-9c97-b3a7c0f5dc38)
