@@ -4,7 +4,11 @@
 
 Put this folder in your Chataigne modules directory, which is most likely
 
+for Windows %USERPROFILE%
 > Documents\\Chataigne\\modules
+
+for others $HOME
+> Chataigne\\modules
 
 ## Usage
 
