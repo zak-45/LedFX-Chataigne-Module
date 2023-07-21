@@ -31,6 +31,16 @@ On command tester, you will have all available commands.
 
 ## Videos
 
+LedFX main features show:
+
+https://youtu.be/dSE_V5AC-nE
+
+![image](https://github.com/zak-45/LedFX-Chataigne-Module/assets/121941293/49a5c934-4301-40b7-996a-23acac1e325f)
+
+
+---
+
+
 LedFX with WLEDAudioSync Demo
 
 https://youtu.be/yu8QgQlLT5g
