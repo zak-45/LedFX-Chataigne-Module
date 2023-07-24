@@ -53,9 +53,10 @@
 			"callback":"VirtualOnOff",
 			"setupCallback":"createDeviceList",
 			"parameters": {
-				"OnOff": {
+				"On or Off": {
 					"type": "Boolean",
-					"default": false, 
+					"default": false,
+					"shortName":"onOff",
 					"description": "Checked will put the virtual device On",
 					"useForMapping": false
 				}
@@ -125,9 +126,10 @@
 			"callback":"SceneOnOff",
 			"setupCallback":"createSceneList",
 			"parameters": {
-				"activate": {
+				"Activate or Deactivate": {
 					"type": "Boolean",
-					"description": "Checked will activate the Scene",					
+					"description": "Checked will activate the Scene",
+					"shortName":"activate",
 					"default": true, 
 					"useForMapping": false
 				}
@@ -154,9 +156,10 @@
 			"menu":"LedFX-Main",
 			"callback":"LedfxOnOff",
 			"parameters":{
-				"play": {
+				"Global Play or Paused": {
 					"type": "Boolean",
-					"description": "Checked will put LedFX On... otherwise Paused it",					
+					"description": "Checked will put LedFX On... otherwise Paused it",
+					"shortName":"play",
 					"default": true, 
 					"useForMapping": false
 				}
@@ -167,9 +170,10 @@
 			"menu":"LedFX-Main",
 			"callback":"LedfxRestart",
 			"parameters":{
-				"restart": {
+				"Restart core": {
 					"type": "Boolean",
-					"description": "Checked will restart LedFX.",					
+					"description": "Checked will restart LedFX.",
+					"shortName":"restart",
 					"default": false, 
 					"useForMapping": false
 				}

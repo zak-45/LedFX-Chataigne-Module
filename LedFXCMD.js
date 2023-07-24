@@ -220,7 +220,7 @@ function LedfxOnOff(play)
 	script.log("-- Custom command On/Off LedFX", play);
 	
 	var actualStatus = local.parameters.ledFXPaused.get();	
-	if ((play == 1 && actualStatus == 1) || (play == 0 && actualStatus == 0) )
+	if ( (play == 1 && actualStatus == 1) || (play == 0 && actualStatus == 0) )
 	{
 		script.log('update play status');
 		payload = {};
@@ -299,20 +299,20 @@ function scenesList()
 */
 
 // Virtual device switch On/Off
-function VirtualOnOff(OnOff, devicename)
+function VirtualOnOff(OnOff, deviceName)
 {
-	script.log("-- Custom command virtual OnOff: ")+devicename;
+	script.log("-- Custom command virtual OnOff: ")+deviceName;
 	
 	local.parameters.autoAdd.set(1);  
 	payload = {};
 	payload.active = OnOff;
 	params.payload = payload;
   
-	sendPUTValue(LedFXvirtual_url+"/"+devicename);
+	sendPUTValue(LedFXvirtual_url+"/"+deviceName);
 }
 
 // Apply effect to virtual device
-function VirtualEffect(effect, devicename)
+function VirtualEffect(effect, deviceName)
 {   
 	script.log("-- Custom command virtual Effect:"+effect);	
 	keepValues = false;
@@ -322,13 +322,13 @@ function VirtualEffect(effect, devicename)
 	payload.type=effect;
     params.payload = payload;
 	
-	local.sendPOST(LedFXvirtual_url+"/"+devicename+"/effects",params);
+	local.sendPOST(LedFXvirtual_url+"/"+deviceName+"/effects",params);
 }
 
 // Remove effect from virtual device
-function VirtualRemoveEffect(devicename)
+function VirtualRemoveEffect(deviceName)
 {   
-	script.log("-- Custom command virtual remove Effect: "+devicename);	
+	script.log("-- Custom command virtual remove Effect: "+deviceName);	
 	keepValues = false;
 	ledFXStatus(keepValues);
 	
@@ -336,7 +336,7 @@ function VirtualRemoveEffect(devicename)
 	payload.type=effect;
     params.payload = payload;
 	
-	local.sendDELETE(LedFXvirtual_url+"/"+devicename+"/effects");
+	local.sendDELETE(LedFXvirtual_url+"/"+deviceName+"/effects");
 }
 
 //We get all virtual devices and populate root.modules.ledfx.values
@@ -409,7 +409,7 @@ function checkLedFX ()
 	var testValues = local.values.getJSONData();
 	var JSONdata = JSON.stringify(testValues.parameters[0]);
 	
-	if(JSONdata == "undefined" )
+	if ( JSONdata == "undefined" )
 	{
 		script.log("Not able to reach LedFX");
 		local.color.set([162/255, 23/255, 12/255, 255/255]);
@@ -471,7 +471,7 @@ function createDeviceList(command)
 {
 	script.log('Generate LedFX virtual devices command');
 	
-	var devList = command.addEnumParameter("devicename","Select virtual device");
+	var devList = command.addEnumParameter("Device name","Select virtual device");
 	devList.addOption("none","none");
 
 	var virtualDevicesList = util.getObjectProperties(local.values.virtuals, true, false);
@@ -486,7 +486,7 @@ function createSceneList(command)
 {
 	script.log('Generate LedFX scenes command');
 	
-	var sceList = command.addEnumParameter("scenename","Select scene name");
+	var sceList = command.addEnumParameter("Scene name","Select scene name");
 	sceList.addOption("none","none");
 
 	var scenesEnumList = util.getObjectProperties(local.values.scenes, true, false);
