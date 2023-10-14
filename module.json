@@ -3,7 +3,7 @@
 	"type": "HTTP",
 	"path": "Software",
 	
-	"version": "1.2.0",
+	"version": "1.3.0",
 	"description": "send CMD to your LedFX",
 	"url":"",
 	"downloadURL": "",
@@ -29,17 +29,103 @@
 				"type": "Trigger",
 				"description": "LedFX documentation"
 			},
+			"LedFX Refresh": {
+				"type": "Trigger",
+				"description": "LedFX status refresh"
+			},
+			"LedFX Refresh Interval": {
+				"type": "Integer",
+				"min": 0,
+				"max": 60,
+				"default": 30,
+				"description": "LedFX status refresh interval (in second).
+	Put 0 to disable."
+			},			
 			"LedFX Paused": {
 				"type": "Boolean",
 				"description": "True if LedFX is on Pause",
 				"default": true,
 				"readOnly": true
-			}		
+			},
+			"BPM Params":{
+				"type": "Container",
+				"description":"BPM extra parameters",
+				"collapsed": true,
+				"Use BPM": { 
+					"type": "Boolean", 
+					"description": "Check to use WLEDAudiosync BPM feature.
+	WLEDAudioSync need to be present, and you need to set the BPM feature on it.
+	If you do not use WLED audio sync, disable wLEDAudioSync.parameters.live to save bandwidth.
+	For some BPM ranges, a LedFX scene can be set.
+	Once BPM detected and on this range, this will trigger corresponding LedFX scene.",
+					"default": false
+				},
+				"Default Scene Name": {
+					"type": "String",
+					"description": "Enter default scene name:
+	will be used where no scene has been set for tempo",
+					"default": "scenename",
+			},				
+				"Larghissimo": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Larghissimo	24 bpm or slower	Very, very slow",
+			},
+				"Grave": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Grave		25 to 45 bpm		Slow and solemn",
+			},
+				"Lento": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Lento		46 to 60 bpm		slow",
+			},
+				"Larghetto": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Larghetto	61 to 66 bpm		Rather broad but still quite slow",
+			},
+				"Adagio": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Adagio		67 to 76 bpm		At ease, slow with great expression",
+			},
+				"Andante": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Andante		77 to 108 bpm		At a walking pace",
+			},
+				"Moderato": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Moderato	109 to 120 bpm		Moderate speed",
+			},
+				"Allegro": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Allegro		121 to 156 bpm		Fast and Bright",
+			},
+				"Vivace": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Vivace		157 to 168 bpm		Lively and fast",
+			},
+				"Presto": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Presto		169 to 200 bpm		Extremely fast",
+			},
+				"Prestissimo": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Prestissimo	201 and over		Faster than Presto",
+			}			
+		}			
 	},
 
 	"values": {	
 	},
-	
 	
 	"scripts": [
 		"LedFXCMD.js"
@@ -123,7 +209,7 @@
 		"De_Activate":
 		{
 			"menu":"LedFX-Scene",
-			"callback":"SceneOnOff",
+			"callback":"sceneOnOff",
 			"setupCallback":"createSceneList",
 			"parameters": {
 				"Activate or Deactivate": {

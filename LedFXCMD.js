@@ -2,13 +2,48 @@
 
 a:zak45
 d:25/10/2022
-v:1.2.0
+v:1.3.0
 
 Chataigne Module for LedFX
 This module connect to ledfx api and let you modify LedFX like virtual On/Off, Effects ...
 
 
+Italian 	Tempo 	Markings	BPM	Meaning
+Larghissimo	24 bpm or slower	Very, very slow
+Grave		25 to 45 bpm		Slow and solemn
+Lento		45 to 60 bpm		slow
+Larghetto	60 to 66 bpm		Rather broad but still quite slow
+Adagio		66 to 76 bpm		At ease, slow with great expression
+Andante		76 to 108 bpm		At a walking pace
+Moderato	108 to 120 bpm		Moderate speed
+Allegro		120 to 156 bpm		Fast and Bright
+Vivace		156 to 168 bpm		Lively and fast
+Presto		168 to 200 bpm		Extremely fast
+Prestissimo	200 and over		Faster than Presto
+
 */
+// BPM
+// to customize , just change the interval xx-yy (be caution to not overlap, nothing checked)
+// logic is to stop at first corresponding entry from Larghissimo to Prestissimo
+var tempoBPM =
+[
+"Larghissimo:0-24",
+"Grave:25-45",
+"Lento:46-60",
+"Larghetto:61-66",
+"Adagio:67-76",
+"Andante:77-108",
+"Moderato:109-120",
+"Allegro:121-156",
+"Vivace:157-168",
+"Presto:169-200",
+"Prestissimo:200-1000"	
+];
+//
+var previousScene = "";
+var useBPM = false;
+var delayBwScene = 1;
+var previousUpdate = 0;
 
 // Main module parameters 
 var params = {};
@@ -32,6 +67,7 @@ var isInit = true;
 var checkStatus = false;
 var doRefreshScenes = false;
 var keepValues = false;
+// 
 
 //We create necessary entries in modules & sequences. We need OS / Sound Card / HTTP and  Sequence with Trigger / Audio.
 function init()
@@ -63,7 +99,7 @@ function init()
 	
 	if (SQexist.name == "sequence")
 	{	
-		script.log("Sequences Sequence exist");
+		script.log("Sequences : Sequence exist");
 		
 	} else {
 			
@@ -127,7 +163,22 @@ function moduleParameterChanged (param)
 			
 			local.color.set([4/255, 162/255, 25/255, 255/255]);
 		}
-	}	
+	} else if (param.name == "ledFXRefresh") {
+
+		keepValues = false;
+		ledFXStatus(keepValues);
+		local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");
+		
+	} else if (param.name == "useBPM") {
+		
+		if (local.parameters.bpmParams.useBPM.get() == 1)
+		{
+			script.log("check WLEDAudioSync");
+			useBPM = true;
+		} else {
+			useBPM = false;			
+		}
+	}
 }
 
 function update()
@@ -193,21 +244,41 @@ function update()
 			}			
 		}
 		
-		script.log("isinit");
+		script.log("isinit finished");
 		isInit = false;
-	}
+		
+	} else {
 
-	if (checkStatus === true && isInit === false)
-	{
-		checkStatus = false;
-		checkLedFX();
-	}
+		if (checkStatus === true)
+		{
+			checkStatus = false;
+			checkLedFX();
+		}
 
-	if (doRefreshScenes === true && isInit === false)
-	{
-		doRefreshScenes = false;
-		scenesList();
-	}	
+		if (doRefreshScenes === true)
+		{
+			doRefreshScenes = false;
+			scenesList();
+		}
+		
+		if ((parseInt(util.getTime()) % local.parameters.ledFXRefreshInterval.get()) == 0)
+		{
+			script.log("tempo refresh loop");
+			keepValues = false;
+			ledFXStatus(keepValues);
+			local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");			
+		}
+		
+		if (useBPM)
+		{
+			// set scene name if LedFX is reachable and not on pause
+			if (local.parameters.ledFXPaused.get() == 0)
+			{
+				setBPMScene();
+			}
+		}
+		
+	}
 }
 
 /*
@@ -254,14 +325,14 @@ function LedfxRestart(restart)
  Scenes Commands
 */
 
-// Acivate or not a scene
+// Activate or not a scene
 //{"id":"testscene","action":"activate"}
-function SceneOnOff(activate, scenename)
+function sceneOnOff(activate, sceneName)
 {
-	script.log("-- Custom command scene activation: "+scenename);
+	script.log("-- Custom command scene activation: "+sceneName);
 	
 	payload = {};
-	payload.id = scenename;	  
+	payload.id = sceneName;	  
 	if (activate == 1) 
 	{
 		payload.action = "activate";
@@ -466,49 +537,113 @@ function dataEvent(data, requestURL)
 	}	
 }
 
-// this will create devices list (enum) from virtuals value object ( contains last populated values)
+// this will create devices list (enum) from virtuals value object (allways contains last populated values)
 function createDeviceList(command)
 {
 	script.log('Generate LedFX virtual devices command');
 	
-	var devList = command.addEnumParameter("Device name","Select virtual device");
+	var virtualDevicesList = util.getObjectProperties(local.values.virtuals, true, false);
+	var devList = command.addEnumParameter("Device name","Select virtual device");	
 	devList.addOption("none","none");
 
-	var virtualDevicesList = util.getObjectProperties(local.values.virtuals, true, false);
-	for ( var i = 0; i < virtualDevicesList.length ; i++)		
-	{	
-		devList.addOption(virtualDevicesList[i],virtualDevicesList[i]);
+	if (virtualDevicesList.length == 0 && SCAexist.name != "undefined")
+	{
+		var defVirtual = SCAexist.parameters.ledFXParams.defaultVirtualDeviceName.get();
+		devList.addOption(defVirtual,defVirtual);
+		
+	} else {
+	
+		for ( var i = 0; i < virtualDevicesList.length ; i++)		
+		{	
+			devList.addOption(virtualDevicesList[i],virtualDevicesList[i]);
+		}
 	}
 }
 
-// this will create scenes list (enum) from scenes value object ( contains last populated values)
+// this will create scenes list (enum) from scenes value object (allways contains last populated values)
 function createSceneList(command)
 {
 	script.log('Generate LedFX scenes command');
-	
+
+	var scenesEnumList = util.getObjectProperties(local.values.scenes, true, false);	
 	var sceList = command.addEnumParameter("Scene name","Select scene name");
 	sceList.addOption("none","none");
 
-	var scenesEnumList = util.getObjectProperties(local.values.scenes, true, false);
-	for ( var i = 0; i < scenesEnumList.length ; i++)		
-	{	
-		sceList.addOption(scenesEnumList[i],scenesEnumList[i]);
+	if (scenesEnumList.length == 0 && SCAexist.name != "undefined")
+	{
+		var defScene = SCAexist.parameters.ledFXParams.defaultSceneName.get();
+		sceList.addOption(defScene,defScene);
+		
+	} else {
+	
+		for ( var i = 0; i < scenesEnumList.length ; i++)		
+		{	
+			sceList.addOption(scenesEnumList[i],scenesEnumList[i]);
+		}
+	}
+}
+
+// set scene name if OSC and BPM value exist
+function setBPMScene()
+{
+	script.log('Check BPM to set corresponding scene');
+	
+	// check OSC present
+	var OSCModule = root.modules.getItemWithName("OSC");
+	if (OSCModule.name == "undefined")
+	{
+		// Warning
+		script.logWarning("LedFX -- OSC not present, Does WLEDAudiosync loaded and BPM set.... ?");
+		
+	} else {
+		
+		// get BPM from OSC
+		var OSCBPM = OSCModule.values.getChild("_WLEDAudioSync_beat_BPM");
+		
+		if (OSCBPM.name != "undefined")
+		{
+			var OSCBPM = parseInt(OSCModule.values._WLEDAudioSync_beat_BPM.get());	
+
+			// retreive tempo values
+			for( var i = 0; i < tempoBPM.length; i++)
+			{
+				var tempoName = tempoBPM[i].split(":")[0];
+				var tempoMin = parseInt(tempoBPM[i].split(":")[1].split("-")[0]);
+				var tempoMax = parseInt(tempoBPM[i].split(":")[1].split("-")[1]);
+				// script.log(OSCBPM, tempoName, tempoMin, tempoMax);
+				
+				// for tempo in the range and scene not blank, set it.
+				if (OSCBPM >= tempoMin && OSCBPM <= tempoMax)
+				{
+					// retreive value and set scene name if different from previous one
+					// and time between two updates > delayBwScene
+					var sceneName = local.parameters.bpmParams.getChild(tempoName).get();
+					var timeBwUpdate = parseInt(util.getTime()) - previousUpdate;
+					
+					//script.log('time : ' + timeBwUpdate);
+					if (sceneName == "")
+					{
+						sceneName = local.parameters.bpmParams.defaultSceneName.get();
+					}					
+					if (sceneName != "" && sceneName != previousScene && timeBwUpdate > delayBwScene)
+					{
+						previousUpdate = parseInt(util.getTime());
+						previousScene = sceneName;						
+						// script.log("scene to set:" + sceneName);
+						sceneOnOff(1, sceneName);
+					}
+					break;
+				}
+			}
+			
+		} else {
+			
+			script.logWarning("LedFX -- OSC BPM value not present, retrying....");						
+		}
 	}
 }
 
 function test()
 {
-
-	var testValues = local.values.getJSONData();
-	var JSONdata = JSON.stringify(testValues.parameters[0]);
-	
-
-	script.log("mmm" + JSONdata);
-	
-	if (JSONdata == "undefined")
-	{
-		script.log('not reachable');
-	} else {
-		script.log('reachable');
-	}
+		
 }
