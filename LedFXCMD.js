@@ -207,7 +207,7 @@ function update()
 		
 		if ((parseInt(util.getTime()) % local.parameters.ledFXRefreshInterval.get()) == 0)
 		{
-			script.log("tempo refresh loop");
+			script.log("status refresh loop");
 			keepValues = false;
 			ledFXStatus(keepValues);
 			local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");			
