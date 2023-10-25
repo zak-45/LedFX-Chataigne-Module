@@ -2,13 +2,15 @@
 
 ## How to Install
 
-Put this folder in your Chataigne modules directory, which is most likely
+Put this repository in your Chataigne modules directory, which is most likely
 
 for Windows %USERPROFILE%
 > Documents\\Chataigne\\modules
 
 for others $HOME
 > Chataigne\\modules
+
+**Name need to be : LedFX** _e.g. \\Chataigne\\modules\\LedFX_
 
 ## Usage
 
