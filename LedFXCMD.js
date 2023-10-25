@@ -41,7 +41,9 @@ var tempoBPM =
 ];
 //
 var previousScene = "";
+var previousMoodScene = "";
 var useBPM = false;
+var useRTMMD = false;
 var delayBwScene = 1;
 var previousUpdate = 0;
 
@@ -58,7 +60,6 @@ var LedFXdevice_url = "/devices";
 var LedFXpower_url = "/power";
 // Windows specific
 var LedFXExeName = "ledfx.exe";
-var ledFXPath = "";
 //SCAnalyzer
 var SCAexist = root.modules.getItemWithName("SCAnalyzer");
 // to made some logic only once at init
@@ -68,57 +69,20 @@ var checkStatus = false;
 var doRefreshScenes = false;
 var keepValues = false;
 // 
+//HOME Location
+//%USERPROFILE% for WIN and $HOME for others
+var homeDIR = "";
+var winHOME = "";
+// module
+var moduleDIR = "/Chataigne/modules/LedFX/";
+var LedFXCmdName= "run.cmd";
+
 
 //We create necessary entries in modules & sequences. We need OS / Sound Card / HTTP and  Sequence with Trigger / Audio.
 function init()
 {
 	script.log("-- Custom command called init()");	
-
-	var OSexist = root.modules.getItemWithName("OS");
-	var SCexist = root.modules.getItemWithName("Sound Card");
-	var SQexist = root.sequences.getItemWithName("Sequence");
-
-
-	if (OSexist.name == "os")
-	{
-		script.log("Module OS exist");
 		
-	} else {
-			
-		var newOSModule = root.modules.addItem("OS");		
-	}
-	
-	if (SCexist.name == "soundCard")
-	{	
-		script.log("Module Sound Card exist");
-		
-	} else {
-			
-		var newSCModule = root.modules.addItem("Sound Card"); 		
-	}
-	
-	if (SQexist.name == "sequence")
-	{	
-		script.log("Sequences : Sequence exist");
-		
-	} else {
-			
-		var newSequence = root.sequences.addItem();
-		var newTSequence = newSequence.layers.addItem("Trigger");
-		var newASequence = newSequence.layers.addItem("Audio");			
-	}
-	
-	if (SCAexist.name == "sCAnalyzer")
-	{	
-		script.log("SCAnalyzer present");
-		var ledfxcontainer = SCAexist.parameters.getChild("LedFX Params");
-		ledfxcontainer.setCollapsed(false);
-	
-	} else {
-			
-		script.log('No SCAnalyzer found');			
-	}
-	
 	// create dashboard if not already
 	ledFXdashboard();
 	
@@ -126,65 +90,43 @@ function init()
 	script.setUpdateRate(1);
 }
 
-/*
-// execution depend on the user response
-function messageBoxCallback(id, result)
-{
-	script.log("Message box callback : "+id+" : "+result); 
-	
-	if (id=="confirmLedFX")
-	{
-		if (result==1){
-			var launchresult = root.modules.os.launchApp(ledFXPath+LedFXExeName);					
-			script.log("LedFX return code : "+launchresult);					
-		}
-	}
-}
-*/
-
-function moduleParameterChanged (param)
-{	
-	script.log("Param changed : "+param.name);
-	
-	if (param.name == "ledFXInfo")
-	{
-		util.gotoURL('https://www.ledfx.app/');
-		
-	} else if (param.name == "ledFXPaused") {
-		
-		var myStatus = local.parameters.ledFXPaused.get();
-		script.log("Ledfx status changed to : " + myStatus);
-		
-		if (myStatus == 1)
-		{
-			local.color.set([162/255, 114/255, 16/255, 255/255]);
-			
-		} else {
-			
-			local.color.set([4/255, 162/255, 25/255, 255/255]);
-		}
-	} else if (param.name == "ledFXRefresh") {
-
-		keepValues = false;
-		ledFXStatus(keepValues);
-		local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");
-		
-	} else if (param.name == "useBPM") {
-		
-		if (local.parameters.bpmParams.useBPM.get() == 1)
-		{
-			script.log("check WLEDAudioSync");
-			useBPM = true;
-		} else {
-			useBPM = false;			
-		}
-	}
-}
-
 function update()
 {
 	if (isInit === true)
 	{ 
+		if (checkModuleExist("OS"))
+		{
+			script.log("Module OS exist");
+			
+		} else {
+				
+			var newOSModule = root.modules.addItem("OS");		
+		}
+
+		var SQexist = root.sequences.getItemWithName("Sequence");
+
+		if (SQexist.name == "sequence")
+		{	
+			script.log("Sequences : Sequence exist");
+			
+		} else {
+				
+			var newSequence = root.sequences.addItem();
+			var newTSequence = newSequence.layers.addItem("Trigger");
+			var newASequence = newSequence.layers.addItem("Audio");			
+		}
+		
+		if (SCAexist.name == "sCAnalyzer")
+		{	
+			script.log("SCAnalyzer present");
+			var ledfxcontainer = SCAexist.parameters.getChild("LedFX Params");
+			ledfxcontainer.setCollapsed(false);
+		
+		} else {
+				
+			script.log('No SCAnalyzer found');			
+		}
+
 		var infos = util.getOSInfos(); 		
 			
 		script.log("Hello "+infos.username);	
@@ -194,7 +136,8 @@ function update()
 		if (infos.name.contains("Windows"))
 		{			
 			var isRunning = root.modules.os.isProcessRunning(LedFXExeName);
-			ledFXPath = util.getEnvironmentVariable("LOCALAPPDATA") + "/Programs/ledfx/";
+			homeDIR = util.getEnvironmentVariable("USERPROFILE") + "/Documents";
+			winHOME = util.getEnvironmentVariable("USERPROFILE");			
 			
 			if ( isRunning == 0 ) {
 				
@@ -217,6 +160,7 @@ function update()
 			var checkProcess = root.modules.os.getRunningProcesses("*");
 			var ledFXIsRunning = false;
 			var ledFXProcessName = "ledfx";
+			homeDIR = util.getEnvironmentVariable("$HOME");			
 			
 			for ( var i = 0; i < checkProcess.length; i ++)
 			{
@@ -269,7 +213,7 @@ function update()
 			local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");			
 		}
 		
-		if (useBPM)
+		if (useBPM === true)
 		{
 			// set scene name if LedFX is reachable and not on pause
 			if (local.parameters.ledFXPaused.get() == 0)
@@ -278,6 +222,95 @@ function update()
 			}
 		}
 		
+		if (useRTMMD === true)
+		{
+			// set scene name if LedFX is reachable and not on pause
+			if (local.parameters.ledFXPaused.get() == 0)
+			{
+				setMoodScene();
+			}
+		}
+	}
+}
+
+function moduleParameterChanged (param)
+{	
+	script.log("Param changed : "+param.name);
+	
+	if (param.name == "ledFXInfo")
+	{
+		util.gotoURL('https://www.ledfx.app/');
+		
+	} else if (param.name == "ledFXPaused") {
+		
+		var myStatus = local.parameters.ledFXPaused.get();
+		script.log("Ledfx status changed to : " + myStatus);
+		
+		if (myStatus == 1)
+		{
+			local.color.set([162/255, 114/255, 16/255, 255/255]);
+			
+		} else {
+			
+			local.color.set([4/255, 162/255, 25/255, 255/255]);
+		}
+	} else if (param.name == "ledFXRefresh") {
+
+		keepValues = false;
+		ledFXStatus(keepValues);
+		local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");
+		
+	} else if (param.name == "useBPM") {
+		
+		if (local.parameters.bpmParams.useBPM.get() == 1)
+		{
+			script.log("check WLEDAudioSync");
+			if (checkModuleExist("WLEDAudioSync"))
+			{
+				useBPM = true;
+				local.parameters.rtmmdParams.useRTMMD.set(0);
+				
+			} else {
+				
+				script.log('No WLEDAudioSync module present');
+				util.showMessageBox("Warning LedFX", "No WLEDAUdioSync module present", "warning", "OK");
+			}			
+			
+		} else {
+			
+			useBPM = false;			
+		}
+		
+	} else if (param.name == "useRTMMD") {
+		
+		if (local.parameters.rtmmdParams.useRTMMD.get() == 1)
+		{
+			script.log("check WLEDAudioSync");
+			if (checkModuleExist("WLEDAudioSync"))
+			{
+				useRTMMD = true;
+				local.parameters.bpmParams.useBPM.set(0);
+				
+			} else {
+				
+				script.log('No WLEDAudioSync module present');
+				util.showMessageBox("Warning LedFX", "No WLEDAUdioSync module present", "warning", "OK");				
+			}
+			
+		} else {
+			
+			useRTMMD = false;			
+		}
+		
+	} else if (param.name == "runLedFX") {
+		
+		//execute LedFX
+		var exeCMD = homeDIR + moduleDIR + LedFXCmdName;
+		if (util.fileExists(exeCMD)){
+			var launchresult = root.modules.os.launchProcess(exeCMD, false);
+		} else {
+			util.showMessageBox("Ledfx not found ", "file name : " + exeCMD , "warning", "Ok");			
+		}				
 	}
 }
 
@@ -602,7 +635,7 @@ function setBPMScene()
 		
 		if (OSCBPM.name != "undefined")
 		{
-			var OSCBPM = parseInt(OSCModule.values._WLEDAudioSync_beat_BPM.get());	
+			var OSCBPMV = parseInt(OSCModule.values._WLEDAudioSync_beat_BPM.get());	
 
 			// retreive tempo values
 			for( var i = 0; i < tempoBPM.length; i++)
@@ -610,10 +643,10 @@ function setBPMScene()
 				var tempoName = tempoBPM[i].split(":")[0];
 				var tempoMin = parseInt(tempoBPM[i].split(":")[1].split("-")[0]);
 				var tempoMax = parseInt(tempoBPM[i].split(":")[1].split("-")[1]);
-				// script.log(OSCBPM, tempoName, tempoMin, tempoMax);
+				// script.log(OSCBPMV, tempoName, tempoMin, tempoMax);
 				
 				// for tempo in the range and scene not blank, set it.
-				if (OSCBPM >= tempoMin && OSCBPM <= tempoMax)
+				if (OSCBPMV >= tempoMin && OSCBPMV <= tempoMax)
 				{
 					// retreive value and set scene name if different from previous one
 					// and time between two updates > delayBwScene
@@ -621,6 +654,8 @@ function setBPMScene()
 					var timeBwUpdate = parseInt(util.getTime()) - previousUpdate;
 					
 					//script.log('time : ' + timeBwUpdate);
+					
+					// if sceneName blank use default one
 					if (sceneName == "")
 					{
 						sceneName = local.parameters.bpmParams.defaultSceneName.get();
@@ -643,7 +678,64 @@ function setBPMScene()
 	}
 }
 
+// set scene name if OSC and Mood value exist
+function setMoodScene()
+{
+	// script.log('Check Mood to set corresponding scene');
+	
+	// check OSC present
+	var OSCModule = root.modules.getItemWithName("OSC");
+	if (OSCModule.name == "undefined")
+	{
+		// Warning
+		script.logWarning("LedFX -- OSC not present, Does WLEDAudiosync loaded and RTMMD set.... ?");
+		
+	} else {
+		
+		var OSCRTMMD = OSCModule.values.getChild("_WLEDAudioSync_mood_color");
+		if (OSCRTMMD.name != "undefined")
+		{
+			// get Mood from OSC and activate scene
+			var mood = OSCModule.wLEDAudioSync.mood.get();	
+			var moodSearched = local.parameters.rtmmdParams.getChild(mood);
+			if (moodSearched.name != "undefined")
+			{
+				var scene = moodSearched.get();
+				if (scene == "")
+				{
+					scene = local.parameters.rtmmdParams.defaultSceneName.get();
+				}
+				if ( previousMoodScene != scene )
+				{
+					sceneOnOff(1, scene);
+					previousMoodScene = scene;
+				}
+				
+			} else {
+				
+				script.logWarning('Unknown mood received');
+			}
+			
+		} else {
+			// warning , no mood param
+			script.logWarning("LedFX -- Does WLEDAudiosync loaded and RTMMD set.... ?... retrying...");
+		}
+	}
+}
+
+function checkModuleExist (moduleName)
+{
+	var moduleExist = root.modules.getItemWithName(moduleName);
+	var result = false;
+	if (moduleExist.name != "undefined")
+	{
+		result = true;
+	}
+	return result;
+}
+
+
 function test()
 {
-		
+
 }

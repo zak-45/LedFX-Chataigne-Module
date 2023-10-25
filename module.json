@@ -25,6 +25,10 @@
 	},
 
 	"parameters": {
+			"Run LedFX": {
+				"type": "Trigger",
+				"description": "Run LedFX App"
+			},		
 			"LedFX Info": {
 				"type": "Trigger",
 				"description": "LedFX documentation"
@@ -57,7 +61,7 @@
 	WLEDAudioSync need to be present, and you need to set the BPM feature on it.
 	If you do not use WLED audio sync, disable wLEDAudioSync.parameters.live to save bandwidth.
 	For some BPM ranges, a LedFX scene can be set.
-	Once BPM detected and on this range, this will trigger corresponding LedFX scene.",
+	Once BPM detected and on this range, this will activate corresponding LedFX scene.",
 					"default": false
 				},
 				"Default Scene Name": {
@@ -121,7 +125,82 @@
 					"description": "Enter scene name for:
 	Prestissimo	201 and over		Faster than Presto",
 			}			
-		}			
+		},
+			"RTMMD Params":{
+				"type": "Container",
+				"description":"RTMMD extra parameters",
+				"collapsed": true,
+				"Use RTMMD": { 
+					"type": "Boolean", 
+					"description": "Check to use WLEDAudiosync RTMMD feature.
+	WLEDAudioSync need to be present, and you need to set the RTMMD feature on it.
+	If you do not use WLED audio sync, disable wLEDAudioSync.parameters.live to save bandwidth.
+	For some Mood, a LedFX scene can be set.
+	Once Mood detected this will activate corresponding LedFX scene.",
+					"default": false
+				},
+				"Default Scene Name": {
+					"type": "String",
+					"description": "Enter default scene name:
+	will be used where no scene has been set for Mood",
+					"default": "scenename",
+			},				
+				"Neutral": {
+					"type": "String",
+					"description": "Enter scene name for:
+	neutral mood , found around the center",
+			},
+				"Joy": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Joy (yellow), on the Top right from middle",
+			},
+				"Extase": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Extase (yellow), on the Top right with higher energy",
+			},
+				"Serenity": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Serenity (yellow), on the Top right for other",
+			},
+				"Disgust": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Disgust (purple), on the Extrem Left, center",
+			},
+				"Sad": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Sad (blue), on the Low Left from middle",
+			},
+				"Pensinve": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Pensinve (blue), on the Low Left for other",
+			},
+				"Rage": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Rage (red), on the Top Left from center or with higher energy",
+			},
+				"Angry": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Angry (red), on the Top Left, for other",
+			},
+				"Calm": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Calm (green), on the Low Right, for other",
+			},
+				"Relax": {
+					"type": "String",
+					"description": "Enter scene name for:
+	Relax (green), on the Low Right, from center",
+			}			
+		}
 	},
 
 	"values": {	
