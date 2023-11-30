@@ -94,6 +94,8 @@ function update()
 {
 	if (isInit === true)
 	{ 
+		isInit = false;
+		
 		if (checkModuleExist("OS"))
 		{
 			script.log("Module OS exist");
@@ -142,7 +144,6 @@ function update()
 			if ( isRunning == 0 ) {
 				
 				script.log("LedFX is not running ");
-				// util.showYesNoCancelBox("confirmLedFX", "LedFX is not running .... ?", "Do you want to start it ?", "warning", "Yes", "No", "Don't care...");
 				local.color.set([162/255, 23/255, 12/255, 255/255]);
 				util.showMessageBox("LedFX","LedFX is not running .... ?", "warning", "Ok");				
 						
@@ -174,7 +175,6 @@ function update()
 			if (ledFXIsRunning === false) 
 			{
 				script.log("LedFX is not running ");
-				// util.showYesNoCancelBox("confirmLedFX", "LedFX is not running .... ?", "Do you want to start it ?", "warning", "Yes", "No", "Don't care...");
 				local.color.set([162/255, 23/255, 12/255, 255/255]);
 				util.showMessageBox("LedFX","LedFX is not running .... ?", "warning", "Ok");
 				
@@ -189,7 +189,6 @@ function update()
 		}
 		
 		script.log("isinit finished");
-		isInit = false;
 		
 	} else {
 
@@ -208,7 +207,7 @@ function update()
 		if ((parseInt(util.getTime()) % local.parameters.ledFXRefreshInterval.get()) == 0)
 		{
 			script.log("status refresh loop");
-			keepValues = false;
+			keepValues = true;
 			ledFXStatus(keepValues);
 			local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");			
 		}
@@ -220,9 +219,7 @@ function update()
 			{
 				setBPMScene();
 			}
-		}
-		
-		if (useRTMMD === true)
+		} else if (useRTMMD === true)
 		{
 			// set scene name if LedFX is reachable and not on pause
 			if (local.parameters.ledFXPaused.get() == 0)
@@ -257,6 +254,7 @@ function moduleParameterChanged (param)
 	} else if (param.name == "ledFXRefresh") {
 
 		keepValues = false;
+		local.parameters.autoAdd.set(1);
 		ledFXStatus(keepValues);
 		local.sendGET(LedFXvirtual_url,"json","Connection: keep-alive","");
 		
@@ -274,6 +272,7 @@ function moduleParameterChanged (param)
 				
 				script.log('No WLEDAudioSync module present');
 				util.showMessageBox("Warning LedFX", "No WLEDAUdioSync module present", "warning", "OK");
+				local.parameters.bpmParams.useBPM.set(0);
 			}			
 			
 		} else {
@@ -294,7 +293,8 @@ function moduleParameterChanged (param)
 			} else {
 				
 				script.log('No WLEDAudioSync module present');
-				util.showMessageBox("Warning LedFX", "No WLEDAUdioSync module present", "warning", "OK");				
+				util.showMessageBox("Warning LedFX", "No WLEDAUdioSync module present", "warning", "OK");
+				local.parameters.rtmmdParams.useRTMMD.set(0);
 			}
 			
 		} else {
@@ -407,7 +407,6 @@ function VirtualOnOff(OnOff, deviceName)
 {
 	script.log("-- Custom command virtual OnOff: ")+deviceName;
 	
-	local.parameters.autoAdd.set(1);  
 	payload = {};
 	payload.active = OnOff;
 	params.payload = payload;
@@ -419,8 +418,6 @@ function VirtualOnOff(OnOff, deviceName)
 function VirtualEffect(effect, deviceName)
 {   
 	script.log("-- Custom command virtual Effect:"+effect);	
-	keepValues = false;
-	ledFXStatus(keepValues);
 	
 	payload = {};
 	payload.type=effect;
@@ -433,8 +430,6 @@ function VirtualEffect(effect, deviceName)
 function VirtualRemoveEffect(deviceName)
 {   
 	script.log("-- Custom command virtual remove Effect: "+deviceName);	
-	keepValues = false;
-	ledFXStatus(keepValues);
 	
     payload = {};
 	payload.type=effect;
@@ -486,8 +481,6 @@ function deviceList()
 function sendPUTValue(value)
 {   
 	script.log("-- Custom command called with value :" + value);
-	keepValues = false;
-	ledFXStatus(keepValues);
 	
 	local.sendPUT(value,params);
 }
@@ -500,11 +493,12 @@ util
 function ledFXStatus(keepValues)
 {
 	script.log("-- Custom command Status LedFX");
+	
 	if (keepValues === false)
 	{
 		local.parameters.clearValues.trigger();
 	}
-	local.parameters.autoAdd.set(1);
+	
 	checkStatus = true;
 }
 
